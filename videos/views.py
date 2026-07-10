@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from profiles.models import Profile
 from .forms import CommentForm, ReplyForm, AdminDeleteObjectForm
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.views import View
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -24,8 +24,8 @@ import random
 import subprocess
 from .templatetags.count import get_media_url
 from django.core.files import File
-# from chunked_upload.models import ChunkedUpload
-from shutil import copyfileobj
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 def glimble(request):
     return render(request, "glimble.html")
@@ -167,6 +167,58 @@ class Index(ListView):
         context['params'] = params
         return context
 
+@login_required
+@require_POST
+def upload_chunk(request):
+    upload_id = request.POST.get("upload_id")
+    chunk_index = request.POST.get("chunk_index")
+    total_chunks = request.POST.get("total_chunks")
+    chunk = request.FILES.get("chunk")
+
+    if not all([upload_id, chunk_index, total_chunks, chunk]):
+        print("Missing fields.")
+        return HttpResponseBadRequest("Missing fields.")
+
+    try:
+        chunk_index = int(chunk_index)
+        total_chunks = int(total_chunks)
+    except ValueError:
+        print("Invalid chunk metadata.")
+        return HttpResponseBadRequest("Invalid chunk metadata.")
+
+    if chunk.size > CHUNK_SIZE:
+        print("Chunk too large.")
+        return HttpResponseBadRequest("Chunk too large.")
+
+    upload_dir = Path(TMP_UPLOAD_DIR) / str(request.user.id)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    filepath = upload_dir / f"{upload_id}.upload"
+
+    expected_size = chunk_index * CHUNK_SIZE
+
+    if filepath.exists():
+        current_size = filepath.stat().st_size
+        if current_size != expected_size:
+            return HttpResponseBadRequest("Unexpected chunk.")
+        mode = "ab"
+    else:
+        if chunk_index != 0:
+            return HttpResponseBadRequest("Upload must begin at chunk 0.")
+        mode = "wb"
+
+    with open(filepath, mode) as f:
+        for data in chunk.chunks():
+            f.write(data)
+
+    finished = (chunk_index + 1) == total_chunks
+
+    return JsonResponse({
+        "success": True,
+        "finished": finished,
+        "upload_id": upload_id,
+    })
+
 class CreateVideo(LoginRequiredMixin, CreateView):
     model = Video
     fields = ['title', 'notification_message', 'description', 'category', 'unlisted', 'push_notification', 'thumbnail', 'video_file']
@@ -213,18 +265,23 @@ class CreateVideo(LoginRequiredMixin, CreateView):
 
         form.instance.id = video_id
 
-        uploaded_video = self.request.FILES['video_file']
-        if not 1024 < uploaded_video.size < 100000000:
-            self.upload_error(form, "The video size must be between 1kb and 100mb.")
+        upload_id = self.request.POST["upload_id"]
 
-        temp_video_file = tempfile.NamedTemporaryFile(delete=False)
-        temp_video_file.write(uploaded_video.read())
+        video_filepath = Path(TMP_UPLOAD_DIR) / str(self.request.user.id) / f"{upload_id}.upload"
+
+        if not video_filepath.exists():
+            self.upload_error(form, "An error occurred receiving the video file.")
+        
+        temp_video_file = File(open(video_filepath, 'rb'))
+
+        if not 1024 < temp_video_file.size < 2*GIGABYTE:
+            self.upload_error(form, "The video size must be between 1kb and 2gb.")
         
         try:
             uploaded_thumbnail = self.request.FILES['thumbnail']
-            if not 1024 < uploaded_thumbnail.size < 5000000:
-                self.upload_error(form, "The thumbnail size must be between 1kb and 5mb.")
-            temp_thumbnail_file = tempfile.NamedTemporaryFile(delete=False)
+            if not 1024 < uploaded_thumbnail.size < 10*MEGABYTE:
+                self.upload_error(form, "The thumbnail size must be between 1kb and 10mb.")
+            temp_thumbnail_file = tempfile.NamedTemporaryFile()
             temp_thumbnail_file.write(uploaded_thumbnail.read())
         except:
             uploaded_thumbnail = False
@@ -235,14 +292,20 @@ class CreateVideo(LoginRequiredMixin, CreateView):
                 self.upload_error(form, "The video duration must be between 1 second and 2 hours.")
 
             video_filename = os.path.join(BASE_DIR, f"{video_id}.mp4")
+            
+            # not very efficient but i don't want to compress a 10mb video the same amount as a 2gb one  
+            for i in range(0, 6, 2):
+                subprocess.run(
+                    f"""ffmpeg -y -i {temp_video_file.name} -vf "scale='min(1920,iw)':-1" -c:v libx264 -pix_fmt yuv420p -crf {str(27+i)} -preset veryfast {video_filename}""",
+                    shell=True,
+                    check=True,
+                )
 
-            subprocess.run(
-                f"""ffmpeg -i {temp_video_file.name} -vf "scale='min(1920,iw)':-1" -c:v libx264 -pix_fmt yuv420p -crf 27 -preset faster {video_filename}""",
-                shell=True,
-                check=True,
-            )
+                if os.path.getsize(video_filename) < 100*MEGABYTE:
+                    break
 
             temp_video_file.close()
+            os.remove(video_filepath)
             
             # this is a bit redundant but I want to prevent videos with doctored lengths from being uploaded
             # while also not having to reencode them if they're unaltered
@@ -319,16 +382,17 @@ class CreateVideo(LoginRequiredMixin, CreateView):
             return super().form_valid(form)
 
         except Exception as e:
-            form.add_error(None, f"An error occurred during processing.")
+            form.add_error(None, f"An error occurred during processing {e}.")
             return self.form_invalid(form)
 
         finally:
-            if video_filename != None and os.path.exists(video_filename):
-                os.remove(video_filename)
-            if temp_video_file != None and os.path.exists(temp_video_file.name):
-                os.remove(temp_video_file.name)
-            if thumbnail_filename != None and os.path.exists(thumbnail_filename):
-                os.remove(thumbnail_filename)
+            try:
+                if video_filename != None and os.path.exists(video_filename):
+                    os.remove(video_filename)
+                if thumbnail_filename != None and os.path.exists(thumbnail_filename):
+                    os.remove(thumbnail_filename)
+            except:
+                pass
 
     def form_invalid(self, form):
         if hasattr(self, 'object') and self.object:

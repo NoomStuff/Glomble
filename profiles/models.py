@@ -81,8 +81,6 @@ class Profile(models.Model): # hi
         if self.customisation.video_banner:
             client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=self.customisation.video_banner.name)
 
-        return
-
     def recalculate_rating(self):
         avg = ProfileRating.objects.filter(rated_profile=self).aggregate(
             Avg("rating")
@@ -110,17 +108,18 @@ class ProfileCustomisation(models.Model):
     def clean(self):
         cleaned_data = super().clean()
         background_text_contrast = self.is_contrast_good(self.background_color, self.text_color) or self.banner_image
-        background_accent_contrast = self.is_contrast_good(self.background_color, self.accent_color) or self.banner_image
-        text_shadow_contrast = self.is_contrast_good(self.text_color, self.text_shadow_color)
+        background_accent_contrast = self.is_contrast_good(self.background_color, self.accent_color) or not self.use_accent or self.banner_image
+        text_shadow_contrast = self.is_contrast_good(self.text_color, self.text_shadow_color) or not self.use_text_shadow
         video_card_text_shadow_contrast = self.is_contrast_good(self.video_card_text_color, self.video_card_text_shadow_color)
+        background_video_card_text_contrast = self.is_contrast_good(self.video_card_text_color, self.background_color) or self.banner_image
 
         errors = []
         if not background_accent_contrast and self.use_accent:
-            errors.append("Accent color must contrast with the background colour.")
-        if not background_text_contrast and ((not text_shadow_contrast and self.use_text_shadow) or not self.use_text_shadow):
+            errors.append("Accent color must contrast with the background color.")
+        if not background_text_contrast and (not text_shadow_contrast or not self.use_text_shadow):
             errors.append("Text color must contrast with the background.")
-        if not video_card_text_shadow_contrast and self.use_video_card_text_shadow:
-            errors.append("Video card text shadow must contrast with the video card text color.")
+        if (not background_video_card_text_contrast and not self.use_video_card_text_shadow) or (not background_video_card_text_contrast and not video_card_text_shadow_contrast and self.use_video_card_text_shadow):
+            errors.append("Video card text must contrast with the background.")
 
         if errors:
             raise ValidationError(errors)

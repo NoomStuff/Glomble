@@ -48,6 +48,13 @@ DAY_TOMSTAMP = 86400
 WEEK_TOMSTAMP = DAY_TOMSTAMP*7
 MONTH_TOMSTAMP = DAY_TOMSTAMP*31
 
+MEGABYTE = 1024 * 1024
+GIGABYTE = MEGABYTE * 1024
+
+TMP_UPLOAD_DIR = os.path.join(BASE_DIR, "temp")
+
+CHUNK_SIZE = 10 * MEGABYTE
+
 # MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # MEDIA_URL = "media/"
 
@@ -62,7 +69,7 @@ INSTALLED_APPS = [
     'dumbshit',
 
     # 'creatorfund',
-    # 'chunked_upload',
+    'chunked_upload',
     'notifications',
     'videos',
     'profiles',

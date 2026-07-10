@@ -1,5 +1,6 @@
 {% extends 'videos/base.html' %}
 {% load crispy_forms_tags %}
+{% load count %}
 
 {% block content %}
 
@@ -14,28 +15,107 @@
 				{{ form|crispy }}
 				
 				<button class="btn btn-outline-info btn-block mt-3" type="submit" id="submitbutton">Submit</button>
-				<script>
-					var mf = document.getElementById("mainform");
-					var subbutton = document.getElementById("submitbutton");
-					mf.onsubmit = function() {
-						openLoader();
-						subbutton.remove(); // prevents users from pressing the button multiple times from getting impatient and accidentally uploading multiple times - arnthorrr
-					}
-				</script>
 			</form>
 		</div>
 	</div>
 </div>
 
 <script>
-	$(document).ready(function () {
-		let element_to_add = document.createElement("input")
-		element_to_add.type = "hidden"
-		element_to_add.name = "upload_id"
-		element_to_add.id = "upload_id"
+	const CHUNK_SIZE = {% chunksize %}
 
-		$(this).getElementById("div_id_video_file").delete()
-	})
+	function getCookie(name) {
+		let cookieValue = null;
+
+		if (document.cookie && document.cookie !== "") {
+			const cookies = document.cookie.split(";");
+
+			for (let cookie of cookies) {
+				cookie = cookie.trim();
+
+				if (cookie.startsWith(name + "=")) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+
+		return cookieValue;
+	}
+
+	const csrftoken = getCookie("csrftoken");
+
+	const form = document.getElementById("mainform");
+	const submitButton = document.getElementById("submitbutton");
+
+	let uploading = false;
+
+	form.addEventListener("submit", async function(e) {
+		if (uploading)
+			return;
+
+		e.preventDefault();
+
+		openLoader();
+		submitButton.disabled = true;
+
+		const videoInput = document.getElementById("id_video_file");
+
+		if (videoInput.files.length === 0) {
+			form.submit();
+			return;
+		}
+
+		const file = videoInput.files[0];
+
+		const uploadId = crypto.randomUUID();
+
+		const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+		try {
+
+			for (let i = 0; i < totalChunks; i++) {
+
+				const start = i * CHUNK_SIZE;
+				const end = Math.min(file.size, start + CHUNK_SIZE);
+
+				const chunk = file.slice(start, end);
+
+				const data = new FormData();
+
+				data.append("upload_id", uploadId);
+				data.append("chunk_index", i);
+				data.append("total_chunks", totalChunks);
+				data.append("chunk", chunk);
+
+				const response = await fetch("{% url 'upload-chunk' %}", {
+					method: "POST",
+					headers: {
+						"X-CSRFToken": csrftoken
+					},
+					body: data
+				});
+
+				if (!response.ok) {
+					throw new Error("Chunk upload failed.");
+				}
+			}
+
+			videoInput.removeAttribute("name");
+
+			const hidden = document.createElement("input");
+			hidden.type = "hidden";
+			hidden.name = "upload_id";
+			hidden.value = uploadId;
+			form.appendChild(hidden);
+
+			uploading = true;
+			form.submit();
+		}
+		catch (err) {
+			alert(err);
+			submitButton.disabled = false;
+		}
+	});
 </script>
 
 {% endblock content %}

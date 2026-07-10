@@ -8,7 +8,7 @@ from django.utils.html import escape
 from django.utils import timezone
 import datetime
 import re
-from Glomble.pc_prod import LOCAL, DEVELOPER_IDS, CREATOR_ID
+from Glomble.pc_prod import LOCAL, DEVELOPER_IDS, CREATOR_ID, CHUNK_SIZE
 
 register = template.Library()
 
@@ -102,9 +102,9 @@ def other_chatter(chat, user_object):
 def find(user_object):
     return Profile.objects.all().get(username=user_object)
 
-@register.simple_tag
-def is_in_creatorfund(profile):
-    return Creator.objects.filter(profile=profile).exists()
+# @register.simple_tag
+# def is_in_creatorfund(profile):
+#     return Creator.objects.filter(profile=profile).exists()
 
 @register.simple_tag
 def has_profile(user_object):
@@ -177,5 +177,8 @@ def is_developer(profile):
 
 @register.simple_tag
 def is_creator(profile):
-    creator_id = 1
-    return profile.username.id == creator_id
+    return profile.id == CREATOR_ID
+
+@register.simple_tag
+def chunksize():
+    return CHUNK_SIZE
