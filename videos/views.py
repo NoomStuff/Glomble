@@ -24,7 +24,7 @@ import random
 import subprocess
 from .templatetags.count import get_media_url
 from django.core.files import File
-from chunked_upload.models import ChunkedUpload
+# from chunked_upload.models import ChunkedUpload
 from shutil import copyfileobj
 
 def glimble(request):
@@ -213,16 +213,12 @@ class CreateVideo(LoginRequiredMixin, CreateView):
 
         form.instance.id = video_id
 
-        uploaded_video = ChunkedUpload.objects.get(
-            upload_id=self.request.POST["upload_id"]
-        )
-
+        uploaded_video = self.request.FILES['video_file']
         if not 1024 < uploaded_video.size < 100000000:
             self.upload_error(form, "The video size must be between 1kb and 100mb.")
 
-        with open(uploaded_video.file.path, "rb") as src:
-            temp_video_file = tempfile.NamedTemporaryFile(delete=False)
-            copyfileobj(src, temp_video_file)
+        temp_video_file = tempfile.NamedTemporaryFile(delete=False)
+        temp_video_file.write(uploaded_video.read())
         
         try:
             uploaded_thumbnail = self.request.FILES['thumbnail']
