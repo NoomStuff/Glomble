@@ -246,12 +246,30 @@
 			});
 		}
 
+		function formatText(className) {
+            const timestampRegex = /\b(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\b/g
+
+            $(`.${className}`).html(function (_, oldHtml) {
+                // made by yours falsely ArnthorrrArnthorrr!
+                // ^ The code he wrote has since been removed but I wanted to keep the comment here cause I like it ok bye
+                
+                oldHtml = oldHtml.replace(timestampRegex, function (match, hour, min, sec) {
+                    const seconds = (parseInt(hour || 0) * 3600) + (parseInt(min) * 60) + parseInt(sec);
+                    return `<a href="#" class="timestamp" data-seconds="${seconds}">${match}</a>`;
+                })
+
+
+                return oldHtml
+            })
+        }
+
 		$(document).ready(function() {
 			const video = $("video")[0];
 			const videoId = "{{ post.id }}";
 			const progressKey = "video-progress-" + videoId;
 			const volumeKey = "video-volume";
 
+			formatText("format");
 			handleReplyForms();
 
 			$(document).on('click', '.timestamp', function(e) {
@@ -375,6 +393,7 @@
 			comments.innerHTML = data.comments;
 
 			handleReplyForms();
+			formatText("format");
 		}
 
 		function showmore() {

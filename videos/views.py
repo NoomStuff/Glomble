@@ -23,8 +23,9 @@ import os
 import random
 import subprocess
 from .templatetags.count import get_media_url
-from .cron import remove_inactive_users
 from django.core.files import File
+from chunked_upload.models import ChunkedUpload
+from shutil import copyfileobj
 
 def glimble(request):
     return render(request, "glimble.html")
@@ -168,7 +169,7 @@ class Index(ListView):
 
 class CreateVideo(LoginRequiredMixin, CreateView):
     model = Video
-    fields = ['title', 'notification_message', 'description', 'category', 'video_file', 'thumbnail', 'unlisted', 'push_notification']
+    fields = ['title', 'notification_message', 'description', 'category', 'unlisted', 'push_notification', 'thumbnail', 'video_file']
     template_name = 'videos/create_video.html'
     redirect_field_name = reverse_lazy('video-create')
     is_valid = None
@@ -212,12 +213,16 @@ class CreateVideo(LoginRequiredMixin, CreateView):
 
         form.instance.id = video_id
 
-        uploaded_video = self.request.FILES['video_file']
+        uploaded_video = ChunkedUpload.objects.get(
+            upload_id=self.request.POST["upload_id"]
+        )
+
         if not 1024 < uploaded_video.size < 100000000:
             self.upload_error(form, "The video size must be between 1kb and 100mb.")
-        
-        temp_video_file = tempfile.NamedTemporaryFile(delete=False)
-        temp_video_file.write(uploaded_video.read())
+
+        with open(uploaded_video.file.path, "rb") as src:
+            temp_video_file = tempfile.NamedTemporaryFile(delete=False)
+            copyfileobj(src, temp_video_file)
         
         try:
             uploaded_thumbnail = self.request.FILES['thumbnail']

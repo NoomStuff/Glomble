@@ -41,7 +41,7 @@ class Video(models.Model):
     title = models.CharField(max_length=75)
     description = models.TextField(blank=True, null=True, validators=[validate_characters], help_text="(must be under 1000 characters)", max_length=1000)
     video_file = models.FileField(validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov'])], help_text="(must be an mp4 or mov between 1kb and 100mb and be under 2 hours)")
-    thumbnail = models.FileField(blank=True, validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg', 'jpeg', 'gif'])], help_text="(must be a png or jpg between 1kb and 5mb)")
+    thumbnail = models.FileField(blank=True, validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg', 'jpeg', 'gif'])], help_text="(must be a png or jpg between 1kb and 5mb. If empty, the first frame of the video will be used)")
     date_posted = models.DateTimeField(default=timezone.now)
     likes = models.ManyToManyField(User, blank=True, related_name='video_likes')
     dislikes = models.ManyToManyField(User, blank=True, related_name='video_dislikes')
@@ -115,4 +115,7 @@ class Comment(models.Model):
 @receiver(post_save, sender=Comment)
 def comment_notify(sender, instance, created, **kwargs):
     if created and not (instance.commenter.shadowbanned):
-        CommentNotification.objects.create(comment=instance, message=f'just commented: "{instance.comment}"')
+        text = instance.comment
+        if len(text) > 50:
+            text = text[:50] + "..."
+        CommentNotification.objects.create(comment=instance, message=f'just commented: "{text}"')

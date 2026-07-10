@@ -98,7 +98,7 @@
                                     {% if request.user == reply.commenter.username %}
                                         <a class="cool-element btn cool-element btn-outline-primary" href="{% url 'comments:comment-update' reply.pk %}">Edit</a>
                                         <a class="cool-element btn cool-element btn-outline-danger" href="{% url 'comments:comment-delete' reply.pk %}">Delete</a>
-                                    {% elif request.user.is_superuser %}
+                                    {% elif request.user.is_superuser or request.user == post.uploader.username %}
                                         <a class="cool-element btn cool-element btn-outline-danger" href="{% url 'comments:comment-delete' reply.pk %}">Delete</a>
                                     {% endif %}
                                     {% if post.uploader.username in reply.likes.all %}

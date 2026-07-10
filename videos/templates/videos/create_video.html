@@ -11,7 +11,8 @@
 			<form method="POST" enctype="multipart/form-data" id="mainform">
 				{% csrf_token %}
 				<legend class="border-bottom mb-4">Upload Video</legend>
-				{{ form | crispy }}
+				{{ form|crispy }}
+				
 				<button class="btn btn-outline-info btn-block mt-3" type="submit" id="submitbutton">Submit</button>
 				<script>
 					var mf = document.getElementById("mainform");
@@ -25,5 +26,16 @@
 		</div>
 	</div>
 </div>
+
+<script>
+	$(document).ready(function () {
+		let element_to_add = document.createElement("input")
+		element_to_add.type = "hidden"
+		element_to_add.name = "upload_id"
+		element_to_add.id = "upload_id"
+
+		$(this).getElementById("div_id_video_file").delete()
+	})
+</script>
 
 {% endblock content %}

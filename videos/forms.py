@@ -6,6 +6,7 @@ from .models import Comment
 class AdminDeleteObjectForm(forms.Form):
     notify = forms.BooleanField(required=False)
     notification_message = forms.CharField(
+        required=False,
         label='',
         widget=forms.Textarea(attrs={
             'rows': '2',
@@ -20,7 +21,7 @@ class CommentForm(forms.ModelForm):
         widget=forms.Textarea(attrs={
             'rows': '3',
             'placeholder': 'Input the text you want to comment!',
-            'maxlength': '500',
+            'maxlength': '1000',
         })
     )
 
@@ -35,7 +36,7 @@ class ReplyForm(forms.ModelForm):
         widget=forms.Textarea(attrs={
             'rows': '3',
             'placeholder': 'Input the text you want to reply!',
-            'maxlength': '500',
+            'maxlength': '1000',
         })
     )
 

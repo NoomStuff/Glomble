@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 import boto3
+import django
+from django.utils.translation import gettext
+django.utils.translation.ugettext = gettext
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +34,7 @@ MILESTONES = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 5000
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-LOCAL = False
+LOCAL = True
 
 LOGIN_URL = 'login'
 
@@ -58,6 +62,7 @@ INSTALLED_APPS = [
     'dumbshit',
 
     # 'creatorfund',
+    'chunked_upload',
     'notifications',
     'videos',
     'profiles',
