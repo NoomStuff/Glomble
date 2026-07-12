@@ -5,4 +5,4 @@ Useful stuff to know:
 
 - Frontend files are located within the separate directories, e.g. "videos/templates/videos/detail_video.html". Note: The "profiles" and "videos" directory both have a "base.html" file, this is unintentional and should be combined into one later on.
 
-- The most important backend files are usually views.py, models.py, and urls.py. Views.py is for interaction between frontend and backend, models.py is for the database structure, and urls.py is used for assigning urls to views to access them. Another important backend file is "videos/templatetags/count.py", this is used for making 
+- The most important backend files are usually views.py, models.py, and urls.py. Views.py is for interaction between frontend and backend, models.py is for the database structure, and urls.py is used for assigning urls to views to access them. Another important backend file is "videos/templatetags/count.py", this is used for interacting between the frontend and backend conveniently.
