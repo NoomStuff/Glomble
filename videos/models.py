@@ -40,7 +40,7 @@ class Video(models.Model):
     notification_message = models.CharField(max_length=50, default="new video", blank=True)
     title = models.CharField(max_length=75)
     description = models.TextField(blank=True, null=True, validators=[validate_characters], help_text="(must be under 1000 characters)", max_length=1000)
-    video_file = models.FileField(blank=True, validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov'])], help_text="(must be an mp4 or mov between 1kb and 2gb and be under 2 hours)")
+    video_file = models.FileField(blank=True, validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'mkv'])], help_text="(must be an mp4, mov or mkv between 1kb and 2gb and be under 2 hours)")
     thumbnail = models.FileField(blank=True, validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg', 'jpeg', 'gif'])], help_text="(must be a png or jpg between 1kb and 10mb. If empty, the first frame of the video will be used)")
     date_posted = models.DateTimeField(default=timezone.now)
     likes = models.ManyToManyField(User, blank=True, related_name='video_likes')

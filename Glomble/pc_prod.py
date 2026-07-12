@@ -69,7 +69,6 @@ INSTALLED_APPS = [
     'dumbshit',
 
     # 'creatorfund',
-    'chunked_upload',
     'notifications',
     'videos',
     'profiles',

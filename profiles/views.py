@@ -74,7 +74,7 @@ def customise_profile(request, id):
         form = ProfileCustomisationForm(request.POST, request.FILES, instance=customisation)
         if form.is_valid():
             if 'banner_image' in request.FILES:
-                if customised_profile.customisation.banner_image:
+                if customised_profile.customisation and customised_profile.customisation.banner_image:
                     client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=customised_profile.customisation.banner_image.name)
 
                 banner = request.FILES['banner_image']
@@ -104,7 +104,7 @@ def customise_profile(request, id):
                 os.remove(temp_banner.name)
                     
             if 'video_banner' in request.FILES:
-                if customised_profile.customisation.video_banner:
+                if customised_profile.customisation and customised_profile.customisation.video_banner:
                     client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=customised_profile.customisation.video_banner.name)
 
                 banner = request.FILES['video_banner']
