@@ -20,8 +20,12 @@ banned_ips.txt
 db.sqlite3.bak
 timeline.txt
 GlombleEnv/
-.vscode/
 conf/
 media/
 config/
 stuff/
+.vscode/
+__pycache__/
+*.pyc
+.venv/
+venv/
