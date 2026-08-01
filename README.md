@@ -1,8 +1,22 @@
-### This is the source code for the YouTube alternative "glomble"!
+![Glomble Logo](videos/static/videos/favicon.png)
+## Social media made for fun, not money.
 
-Useful stuff to know:
-- The code for profiles, videos, reports, etc. are stored in separate directories. These directories are also used for related things, for example the code that handles private messaging is stored in the profiles directory. 
+This is the source code for the open source YouTube alternative ***"glomble"***!
 
-- Frontend files are located within the separate directories, e.g. "videos/templates/videos/detail_video.html". Note: The "profiles" and "videos" directory both have a "base.html" file, this is unintentional and should be combined into one later on.
+If you just wanna use the site you can head over to [glomble.com](https://glomble.com/).
 
-- The most important backend files are usually views.py, models.py, and urls.py. Views.py is for interaction between frontend and backend, models.py is for the database structure, and urls.py is used for assigning urls to views to access them. Another important backend file is "videos/templatetags/count.py", this is used for interacting between the frontend and backend conveniently.
+---
+
+### Got a problem or idea?
+You can open an [issue](https://github.com/404talentnotfound/Glomble/issues) and describe what's up.
+
+### If you're a dev
+Here's some useful stuff to know:
+
+- The code for profiles, videos, reports, etc. are stored in separate directories. These directories are also used for related things, for example the code that handles private messaging is stored in the `profiles` directory. 
+
+- Frontend files are located within the separate directories, e.g. `videos/templates/videos/detail_video.html`. Note: The `profiles` and `videos` directory both have a `base.html` file, this is unintentional and should be combined into one later on.
+
+- The most important backend files are usually `views.py`, `models.py`, and `urls.py`. `Views.py` is for interaction between frontend and backend, `models.py` is for the database structure, and `urls.py` is used for assigning urls to views to access them. Another important backend file is `videos/templatetags/count.py`, this is used for interacting between the frontend and backend conveniently.
+
+Pull requests are open. Feel free to contribute!
