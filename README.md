@@ -3,11 +3,11 @@
 
 This is the source code for the open source YouTube alternative ***"glomble"***!
 
-If you just wanna use the site you can head over to [glomble.com](https://glomble.com/).
+If you just want to use the site you can head over to [glomble.com](https://glomble.com/).
 
 ---
 
-### Got a problem or idea?
+### Do you have a problem or idea?
 You can open an [issue](https://github.com/404talentnotfound/Glomble/issues) and describe what's up.
 
 ### If you're a dev
