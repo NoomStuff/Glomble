@@ -11,6 +11,6 @@ If you just want to use the site you can head over to [glomble.com](https://glom
 You can open an [issue](https://github.com/404talentnotfound/Glomble/issues) and describe what's up.
 
 ### If you're a dev
-You can check out the [contributing guide](./CONTRIBUTING.md) for a guide on running and contributing to the project.
+You can check out [CONTRIBUTING.md](./CONTRIBUTING.md) for a guide on running the project locally and making contributions.
 
 Pull requests are welcome, feel free to contribute!
