@@ -4,9 +4,12 @@ labels: ["feat", "pending"]
 title: "[FR]: "
 body:
   - type: checkboxes
+    id: confirmation
     attributes:
+      label: Please confirm following
       options:
         - label: I have searched existing issues and am confident that this feature request is unique.
+          required: true
   - type: input
     id: description
     attributes:
@@ -24,7 +27,10 @@ body:
     attributes:
       label: The problem
       description: Please describe the problem you are solving or new feature you're suggesting
-      placeholder:  I would like to see '...' / I'm always frustrated when '...' happens / '...' would be better if '...'
+      placeholder: | 
+        I would like to see '...'
+        I'm always frustrated when '...' happens
+        '...' would be better if '...'
     validations:
       required: true
   - type: textarea

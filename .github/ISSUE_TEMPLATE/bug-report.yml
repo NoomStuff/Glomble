@@ -4,9 +4,12 @@ labels: ["bug"]
 title: "[Bug]: "
 body:
   - type: checkboxes
+    id: confirmation
     attributes:
+      label: Please confirm following
       options:
-        - label: I have searched existing issues and am confident that this bug is unique.
+        - label: I have searched existing issues and am confident that this bug report is unique.
+          required: true
   - type: input
     id: description
     attributes:
@@ -18,7 +21,7 @@ body:
     id: repro
     attributes:
       label: How to Reproduce?
-      description: Steps to reproduce the behavior
+      description: Steps to see the wrong behavior
       placeholder: |
         1. Go to '...'
         2. Click on '...'
