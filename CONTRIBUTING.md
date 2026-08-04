@@ -5,8 +5,8 @@ Glomble is a Django project, and most features live in their own app directories
 ## Good to Know
 
 - This repository uses separate folders for major features such as `videos`, `profiles`, `comments`, `reports`, `feedback`, and `notifications`. These directories are also used for related things, for example the code that handles private messaging is stored in the profiles directory.
-- Frontend files are located within the separate directories, e.g. `videos/templates/videos/detail_video.html`. Note: The `profiles` and `videos` directory both have a `base.html` file, this is unintentional and should be combined into one later on.
-- `profiles` and `videos` both currently have a `base.html` file. The README notes that this is accidental and should eventually be consolidated.
+- Frontend files are located within the separate directories, e.g. `videos/templates/videos/detail_video.html`.
+- `profiles` and `videos` both currently have a `base.html` file. The README notes that this is accidental, only the one from `videos` should be used.
 - The most important backend files are usually `views.py`, `models.py`, and `urls.py`. `Views.py` is for interaction between frontend and backend, `models.py` is for the database structure, and `urls.py` is used for assigning urls to views to access them. Another important backend file is `videos/templatetags/count.py`, this is used for interacting between the frontend and backend conveniently.
 - A useful helper for templates and UI logic is `videos/templatetags/count.py`.
 
