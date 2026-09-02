@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 import magic
-from Glomble.pc_prod import client, AWS_STORAGE_BUCKET_NAME
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
@@ -68,7 +67,7 @@ class Profile(models.Model): # hi
 
     def delete_media(self):
         if self.profile_picture.name != "profiles/pfps/default.png":
-            client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=self.profile_picture.name)
+            self.profile_picture.delete(save=False)
             self.profile_picture.name = "profiles/pfps/default.png"
             self.save()
         
@@ -76,10 +75,10 @@ class Profile(models.Model): # hi
             return
         
         if self.customisation.banner_image:
-            client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=self.customisation.banner_image.name)
+            self.customisation.banner_image.delete(save=False)
 
         if self.customisation.video_banner:
-            client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=self.customisation.video_banner.name)
+            self.customisation.video_banner.delete(save=False)
 
     def recalculate_rating(self):
         avg = ProfileRating.objects.filter(rated_profile=self).aggregate(

@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 from reports.models import VideoReport, ProfileReport, BugReport, Suggestion
 from profiles.models import Profile, BanAppeal
 from videos.models import Comment, Video
@@ -152,6 +153,8 @@ def video_object_as_queryset(video_object):
 
 @register.simple_tag
 def get_media_url():
+    if LOCAL:
+        return settings.MEDIA_URL.rstrip("/")
     if not LOCAL:
         return "https://media.glomble.com"
     return "https://test-media.glomble.com"

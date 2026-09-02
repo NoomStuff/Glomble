@@ -8,6 +8,7 @@ from django.views.generic.edit import UpdateView, DeleteView, CreateView
 from django.contrib.auth.models import User
 from django.views import View
 from django.db.models import Q, Count, Max
+from django.core.files import File
 from .forms import UserRegisterForm, MessageForm, ProfileCustomisationForm, ProfileRatingForm, BanAppealForm, ResendEmailForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .decorators import user_not_authenticated
@@ -75,14 +76,14 @@ def customise_profile(request, id):
         if form.is_valid():
             if 'banner_image' in request.FILES:
                 if customised_profile.customisation and customised_profile.customisation.banner_image:
-                    client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=customised_profile.customisation.banner_image.name)
+                    customised_profile.customisation.banner_image.delete(save=False)
 
                 banner = request.FILES['banner_image']
                 form.save(commit=False)
                 temp_banner = tempfile.NamedTemporaryFile(delete=False)
                 for chunk in banner.chunks():
                     temp_banner.write(chunk)
-                form.instance.banner_image = f"profiles/banners/{customised_profile.id}-{random_id}.jpg"
+                temp_banner.close()
 
                 try:
                     subprocess.run(f"ffmpeg -y -i {temp_banner.name} {customised_profile.id}-banner.jpg", shell=True, check=True)
@@ -90,29 +91,26 @@ def customise_profile(request, id):
                     form.add_error("banner_image","An error occurred processing this file, please try another.")
                     return render(request, 'profiles/customise_profile.html', {'form': form, 'customised_profile': customised_profile})
 
-                with open(f'{customised_profile.id}-banner.jpg') as pfp_file:
-                    client.upload_fileobj(
-                        pfp_file.buffer,
-                        AWS_STORAGE_BUCKET_NAME,
+                with open(f'{customised_profile.id}-banner.jpg', 'rb') as pfp_file:
+                    form.instance.banner_image.save(
                         f"profiles/banners/{customised_profile.id}-{random_id}.jpg",
-                        ExtraArgs={"ContentType": 'image/jpg'},
+                        File(pfp_file),
+                        save=False,
                     )
-
-                temp_banner.close()
 
                 os.remove(f"{customised_profile.id}-banner.jpg")
                 os.remove(temp_banner.name)
                     
             if 'video_banner' in request.FILES:
                 if customised_profile.customisation and customised_profile.customisation.video_banner:
-                    client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=customised_profile.customisation.video_banner.name)
+                    customised_profile.customisation.video_banner.delete(save=False)
 
                 banner = request.FILES['video_banner']
                 form.save(commit=False)
                 temp_video_banner = tempfile.NamedTemporaryFile(delete=False)
                 for chunk in banner.chunks():
                     temp_video_banner.write(chunk)
-                form.instance.video_banner = f"profiles/video_banners/{customised_profile.id}-{random_id}.jpg"
+                temp_video_banner.close()
 
                 try:
                     subprocess.run(f"ffmpeg -y -i {temp_video_banner.name} -vf scale=256:220 {customised_profile.id}-videobanner.jpg", shell=True, check=True)
@@ -120,15 +118,12 @@ def customise_profile(request, id):
                     form.add_error("video_banner","An error occurred processing this file, please try another.")
                     return render(request, 'profiles/customise_profile.html', {'form': form, 'customised_profile': customised_profile})
 
-                with open(f'{customised_profile.id}-videobanner.jpg') as pfp_file:
-                    client.upload_fileobj(
-                        pfp_file.buffer,
-                        AWS_STORAGE_BUCKET_NAME,
+                with open(f'{customised_profile.id}-videobanner.jpg', 'rb') as pfp_file:
+                    form.instance.video_banner.save(
                         f"profiles/video_banners/{customised_profile.id}-{random_id}.jpg",
-                        ExtraArgs={"ContentType": 'image/jpg'},
+                        File(pfp_file),
+                        save=False,
                     )
-
-                temp_video_banner.close()
 
                 os.remove(f"{customised_profile.id}-videobanner.jpg")
                 os.remove(temp_video_banner.name)
@@ -430,12 +425,10 @@ class UpdateProfile(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                     temp_pfp = tempfile.NamedTemporaryFile(delete=False)
                     for chunk in newpfp.chunks():
                         temp_pfp.write(chunk)
+                    temp_pfp.close()
                     try:
                         if profile.profile_picture.name != "profiles/pfps/default.png":
-                            try:
-                                client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=profile.profile_picture.name)
-                            except Exception as e:
-                                pass
+                            profile.profile_picture.delete(save=False)
                     except Exception as e:
                         pass
 
@@ -448,15 +441,12 @@ class UpdateProfile(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
                     form.instance.profile_picture = f"profiles/pfps/{profile.id}-{random_id}.jpg"
 
-                    with open(f'{profile.id}.jpg') as pfp_file:
-                        client.upload_fileobj(
-                            pfp_file.buffer,
-                            AWS_STORAGE_BUCKET_NAME,
+                    with open(f'{profile.id}.jpg', 'rb') as pfp_file:
+                        form.instance.profile_picture.save(
                             f"profiles/pfps/{profile.id}-{random_id}.jpg",
-                            ExtraArgs={"ContentType": 'image/jpg'},
+                            File(pfp_file),
+                            save=False,
                         )
-
-                    temp_pfp.close()
 
                     os.remove(f"{profile.id}.jpg")
                     os.remove(temp_pfp.name)

@@ -6,7 +6,6 @@ from notifications.models import VideoNotification, CommentNotification
 from django.db.models.signals import post_delete, post_save, m2m_changed
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
-from Glomble.pc_prod import client, AWS_STORAGE_BUCKET_NAME
 
 def validate_characters(value: str):
     if value.count('\n') > 50:
@@ -104,8 +103,10 @@ def video_created(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Video)
 def delete_files(sender, instance, using, **kwargs):
-    client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=instance.video_file.name)
-    client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=instance.thumbnail.name)
+    if instance.video_file:
+        instance.video_file.delete(save=False)
+    if instance.thumbnail:
+        instance.thumbnail.delete(save=False)
 
 class Comment(models.Model):
     comment = models.TextField(validators=[validate_characters], max_length=1000)

@@ -281,8 +281,9 @@ class CreateVideo(LoginRequiredMixin, CreateView):
             uploaded_thumbnail = self.request.FILES['thumbnail']
             if not 1024 < uploaded_thumbnail.size < 10*MEGABYTE:
                 self.upload_error(form, "The thumbnail size must be between 1kb and 10mb.")
-            temp_thumbnail_file = tempfile.NamedTemporaryFile()
+            temp_thumbnail_file = tempfile.NamedTemporaryFile(delete=False)
             temp_thumbnail_file.write(uploaded_thumbnail.read())
+            temp_thumbnail_file.close()
         except:
             uploaded_thumbnail = False
 
@@ -397,8 +398,10 @@ class CreateVideo(LoginRequiredMixin, CreateView):
     def form_invalid(self, form):
         if hasattr(self, 'object') and self.object:
             try:
-                client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=self.object.video_file.name)
-                client.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=self.object.thumbnail.name)
+                if self.object.video_file:
+                    self.object.video_file.delete(save=False)
+                if self.object.thumbnail:
+                    self.object.thumbnail.delete(save=False)
             except:
                 pass
             self.object.delete()

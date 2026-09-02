@@ -22,6 +22,7 @@ timeline.txt
 GlombleEnv/
 conf/
 media/
+temp/
 config/
 stuff/
 .vscode/

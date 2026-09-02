@@ -147,6 +147,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "profiles/static"), os.path.join(BASE_DIR, "videos/static"))
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -187,31 +189,28 @@ DATABASES = {
 }
 
 STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-    },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
+if LOCAL:
+    STORAGES["default"] = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": MEDIA_ROOT,
+            "base_url": MEDIA_URL,
+        },
+    }
+else:
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    }
+
 if not LOCAL:
     AWS_S3_SECRET_ACCESS_KEY = open(os.path.join(BASE_DIR, "storage_secret_key.txt")).read()
     AWS_S3_ACCESS_KEY_ID = open(os.path.join(BASE_DIR, "storage_access_key.txt")).read()
     AWS_STORAGE_BUCKET_NAME  = "glomble"
-    AWS_S3_SIGNATURE_VERSION = 's3v4'
-    AWS_S3_ENDPOINT_URL = "https://80dca6dc1ffe30ce65d7c4ea99650842.r2.cloudflarestorage.com"
-
-    client = boto3.client(
-        "s3",
-        aws_access_key_id = AWS_S3_ACCESS_KEY_ID,
-        aws_secret_access_key = AWS_S3_SECRET_ACCESS_KEY,
-        endpoint_url = AWS_S3_ENDPOINT_URL
-    )
-else:
-    AWS_S3_SECRET_ACCESS_KEY = open(os.path.join(BASE_DIR, "testing_storage_secret_key.txt")).read()
-    AWS_S3_ACCESS_KEY_ID = open(os.path.join(BASE_DIR, "testing_storage_access_key.txt")).read()
-    AWS_STORAGE_BUCKET_NAME  = "glomble-testing"
     AWS_S3_SIGNATURE_VERSION = 's3v4'
     AWS_S3_ENDPOINT_URL = "https://80dca6dc1ffe30ce65d7c4ea99650842.r2.cloudflarestorage.com"
 
